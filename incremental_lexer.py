@@ -1,8 +1,17 @@
 """
 incremental_lexer.py
+
+Re-tokenizes ONLY the lines touched by an edit, reuses every other token
+(shifting their offsets), and splices the result into the cached token list.
+
+Why whole lines?  Our lexer has no multi-line tokens (no block comments, no
+multi-line strings) and the only "state" it carries is the line number. So the
+lexer state at the START of any line is always identical. That makes
+"re-lex the dirty lines" exactly equal to "re-lex everything" - by construction.
 """
 
-from lexer import tokenize
+import re
+from lexer import tokenize, LexError
 
 
 def _lower_bound(tokens, x):
@@ -47,7 +56,13 @@ def relex(old_src, new_src, tokens, edit):
     # 3. Re-lex only the dirty lines. (Done BEFORE touching the cache, so if the
     #    new text has a lex error nothing is corrupted.)
     first_line = 1 + new_src.count("\n", 0, ds)
-    middle = tokenize(new_src[ds:de_new])[:-1]               # drop the EOF token
+    try:
+        middle = tokenize(new_src[ds:de_new])[:-1]           # drop the EOF token
+    except LexError as e:                                    # report ABSOLUTE offset / line
+        m = re.match(r"(.*) at offset (\d+), line (\d+)$", str(e))
+        if not m:
+            raise
+        raise LexError(f"{m.group(1)} at offset {int(m.group(2)) + ds}, line {int(m.group(3)) + first_line - 1}") from None
     for t in middle:
         t.start += ds
         t.end += ds

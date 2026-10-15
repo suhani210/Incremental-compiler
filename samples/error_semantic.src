@@ -1,0 +1,7 @@
+int x = 5;
+int y = z + 1;
+if (x) {
+    x = x < y;
+}
+print(x, y);
+int x = 7;

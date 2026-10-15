@@ -1,0 +1,92 @@
+id,category,test_case,expected,actual,result,time_ms
+V01,Valid,variable declaration with arithmetic,ok,ok,PASS,0.096
+V02,Valid,if / else,ok,ok,PASS,0.103
+V03,Valid,while loop,ok,ok,PASS,0.086
+V04,Valid,nested blocks,ok,ok,PASS,0.069
+V05,Valid,built-in function call,ok,ok,PASS,0.067
+V06,Valid,boolean operators && || !,ok,ok,PASS,0.087
+V07,Valid,unary minus and parentheses,ok,ok,PASS,0.060
+V08,Valid,shadowing in inner block,ok,ok,PASS,0.045
+V09,Valid,comments and blank lines,ok,ok,PASS,0.019
+V10,Valid,boolean literals as condition,ok,ok,PASS,0.056
+V11,Valid,equality of two bools in a condition,ok,ok,PASS,0.088
+S01,Invalid syntax,missing semicolon,"syntax containing ""missing ';'""",syntax: missing ';' to end the statement (found 'int'),PASS,0.401
+S02,Invalid syntax,missing closing brace,syntax containing 'end of file',"syntax: unexpected end of file (a '}', ')' or ';' is probably missing)",PASS,0.167
+S03,Invalid syntax,missing closing parenthesis,"syntax containing ""missing ')'""",syntax: missing ')' (found '{'),PASS,0.042
+S04,Invalid syntax,declaration without a name,syntax containing 'variable name',syntax: expected a variable name (found '='),PASS,0.019
+S05,Invalid syntax,'else' without 'if',syntax containing 'unexpected',syntax: unexpected 'else' here,PASS,0.029
+S06,Invalid syntax,condition without parentheses,"syntax containing ""expected '('""",syntax: expected '(' (found 'a'),PASS,0.027
+S07,Invalid syntax,extra closing brace,syntax containing 'unexpected',syntax: unexpected '}' here,PASS,0.024
+S08,Invalid syntax,missing '=' in declaration,"syntax containing ""expected '='""",syntax: expected '=' (found '5'),PASS,0.015
+S09,Invalid syntax,empty condition,syntax containing 'unexpected',syntax: unexpected ')' here,PASS,0.018
+S10,Invalid syntax,unsupported 'return',syntax containing 'return',syntax: unexpected 'return' here ('return' is not supported by this language),PASS,0.016
+S11,Invalid syntax,number glued to name,syntax containing 'variable name',syntax: expected a variable name (found '5'),PASS,0.016
+S12,Invalid syntax,dangling operator,syntax containing 'unexpected',syntax: unexpected ';' here,PASS,0.021
+S13,Invalid syntax,unclosed call,"syntax containing ""missing ')'""",syntax: missing ')' (found ';'),PASS,0.031
+L01,Lexical error,illegal character @,"lexical containing ""'@'""",lexical: unexpected character '@' (not part of the language),PASS,0.014
+L02,Lexical error,illegal character #,"lexical containing ""'#'""",lexical: unexpected character '#' (not part of the language),PASS,0.009
+L03,Lexical error,single & (not &&),"lexical containing ""'&'""",lexical: unexpected character '&' (not part of the language),PASS,0.011
+L04,Lexical error,single | (not ||),"lexical containing ""'|'""",lexical: unexpected character '|' (not part of the language),PASS,0.009
+L05,Lexical error,string literal (unsupported),"lexical containing '\'""\''","lexical: unexpected character '""' (not part of the language)",PASS,0.008
+L06,Lexical error,error reported on the right line,"lexical containing ""'$'""",lexical: unexpected character '$' (not part of the language),PASS,0.201
+M01,Semantic error,undeclared variable,"semantic containing ""undeclared variable 'b'""","semantic: undeclared variable 'b' (declare it first, e.g. 'int b = 0;')",PASS,0.050
+M02,Semantic error,assignment to undeclared variable,semantic containing 'assignment to undeclared',semantic: assignment to undeclared variable 'a',PASS,0.024
+M03,Semantic error,redeclaration in global scope,semantic containing 'redeclaration',semantic: redeclaration of 'a' (already declared in this scope),PASS,0.035
+M04,Semantic error,redeclaration in the same block,semantic containing 'redeclaration',semantic: redeclaration of 'a' (already declared in this block),PASS,0.037
+M05,Semantic error,int initialised with bool,semantic containing 'cannot initialize',semantic: cannot initialize int variable 'a' with a bool expression,PASS,0.027
+M06,Semantic error,if condition is int,semantic containing 'must be bool',semantic: condition of 'if' must be bool but got int (try a comparison like x != 0),PASS,0.060
+M07,Semantic error,arithmetic on bool,semantic containing 'needs int operands',semantic: operator '+' needs int operands but got bool and int,PASS,0.024
+M08,Semantic error,&& on ints,semantic containing 'needs bool operands',semantic: operator '&&' needs bool operands but got int and int,PASS,0.041
+M09,Semantic error,! on int,"semantic containing ""'!' needs a bool""",semantic: operator '!' needs a bool operand but got int,PASS,0.036
+M10,Semantic error,comparing int with bool,semantic containing 'cannot compare',semantic: cannot compare int with bool using '==',PASS,0.048
+M11,Semantic error,division by zero literal,semantic containing 'division by zero',semantic: division by zero,PASS,0.047
+M12,Semantic error,call to unknown function,semantic containing 'undeclared function',semantic: call to undeclared function 'foo' (only print(...) is built in),PASS,0.023
+M13,Semantic error,wrong number of arguments,semantic containing 'expects 1',semantic: 'print' expects 1 argument(s) but got 2,PASS,0.027
+M14,Semantic error,use before declaration,semantic containing 'undeclared',semantic: assignment to undeclared variable 'a',PASS,0.028
+M15,Semantic error,variable used outside its block,semantic containing 'undeclared',semantic: assignment to undeclared variable 'a',PASS,0.033
+M16,Semantic error,assigning bool to int variable,semantic containing 'cannot assign',semantic: cannot assign a bool value to int variable 'a',PASS,0.033
+M17,Semantic error,several errors are all reported,semantic containing 'undeclared',semantic: assignment to undeclared variable 'x',PASS,0.044
+B01,Boundary,empty file,ok,ok,PASS,0.004
+B02,Boundary,only whitespace,ok,ok,PASS,0.003
+B03,Boundary,only comments,ok,ok,PASS,0.003
+B04,Boundary,no trailing newline,ok,ok,PASS,0.014
+B05,Boundary,Windows (CRLF) line endings,ok,ok,PASS,0.022
+B06,Boundary,huge integer literal,ok,ok,PASS,0.014
+B07,Boundary,30 nested blocks,ok,ok,PASS,0.492
+B08,Boundary,expression with 500 terms,ok,ok,PASS,1.997
+B09,Boundary,"very long line (4,000+ chars)",ok,ok,PASS,6.273
+B10,Boundary,identifier with underscore and digits,ok,ok,PASS,0.024
+B11,Boundary,identifier that starts with a keyword,ok,ok,PASS,0.029
+B12,Boundary,60 nested parentheses,ok,ok,PASS,0.302
+B13,Boundary,a lone semicolon,syntax containing 'unexpected',syntax: unexpected ';' here,PASS,0.032
+B14,Boundary,error on the very last character,syntax containing 'end of file',"syntax: unexpected end of file (a '}', ')' or ';' is probably missing)",PASS,0.025
+B15,Boundary,tabs as indentation,ok,ok,PASS,0.069
+C01,Complex,"nested loops, branches, calls, long expressions",ok,ok,PASS,0.300
+C02,Complex,complex program with one hidden type error,semantic containing 'cannot assign',semantic: cannot assign a bool value to int variable 'total',PASS,0.270
+E01,Incremental edit,change a number,incremental == full compile,identical,PASS,0.309
+E02,Incremental edit,rename identifier,incremental == full compile,identical,PASS,0.313
+E03,Incremental edit,rename global used in blocks,incremental == full compile,identical,PASS,0.282
+E04,Incremental edit,change operator,incremental == full compile,identical,PASS,0.293
+E05,Incremental edit,insert statement at top,incremental == full compile,identical,PASS,0.307
+E06,Incremental edit,insert stmt in while,incremental == full compile,identical,PASS,0.295
+E07,Incremental edit,delete a line,incremental == full compile,identical,PASS,0.241
+E08,Incremental edit,delete a declaration,incremental == full compile,identical,PASS,0.281
+E09,Incremental edit,delete whole while,incremental == full compile,identical,PASS,0.163
+E10,Incremental edit,add newline inside,incremental == full compile,identical,PASS,0.310
+E11,Incremental edit,remove newline (join),incremental == full compile,identical,PASS,0.400
+E12,Incremental edit,edit first char,incremental == full compile,identical,PASS,0.468
+E13,Incremental edit,edit last char,incremental == full compile,identical,PASS,0.331
+E14,Incremental edit,append at end,incremental == full compile,identical,PASS,0.290
+E15,Incremental edit,merge two tokens,incremental == full compile,identical,PASS,0.203
+E16,Incremental edit,turn code into comment,incremental == full compile,identical,PASS,0.268
+E17,Incremental edit,uncomment code,incremental == full compile,identical,PASS,0.499
+E18,Incremental edit,edit inside a comment,incremental == full compile,identical,PASS,0.234
+E19,Incremental edit,syntax error: drop ;,incremental == full compile,identical,PASS,0.135
+E20,Incremental edit,syntax error: drop },incremental == full compile,identical,PASS,0.230
+E21,Incremental edit,lex error: bad char,incremental == full compile,identical,PASS,0.166
+E22,Incremental edit,no change,incremental == full compile,identical,PASS,0.199
+E23,Incremental edit,cond of while changed,incremental == full compile,identical,PASS,0.437
+E24,Incremental edit,else removed,incremental == full compile,identical,PASS,0.308
+E25,Incremental edit,type error introduced,incremental == full compile,identical,PASS,0.537
+E26,Incremental edit,redeclaration introduced,incremental == full compile,identical,PASS,0.414
+E27,Incremental edit,redeclaration fixed,incremental == full compile,identical,PASS,0.288

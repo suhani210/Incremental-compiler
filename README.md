@@ -1,72 +1,94 @@
-# Incremental Lexical & Syntax Analyzer
+# Incremental Lexical, Syntax and Semantic Analyzer
 
-**Design and Implementation of an Incremental Lexical and Syntax Analyzer for
-Reduced Recompilation Overhead**
+A compiler front end for a small C-like language that **re-does only the work an edit made necessary**.
+After an edit it re-lexes only the touched lines, re-parses only the affected statements, and re-checks
+only the statements whose meaning can have changed. Everything else is reused from a cache.
 
-Compiler Design Laboratory Project — Phase 1
-Suhani Chauhan (24BKT0153)
+Course: Compiler Design Laboratory  |  Author: Suhani Chauhan (24BKT0153)
 
-## What this is
+## 1. Requirements
+* Python 3.8 or newer (no other packages needed to run the compiler or tests)
+* Optional, for benchmark graphs only: `pip install matplotlib numpy`
 
-Conventional compilers re-run lexing, parsing, and semantic analysis on an
-*entire* source file for every compilation request, even when only one line
-changed. This project designs an incremental compiler front end that:
+## 2. Files
 
-- Detects the minimal changed region of the source text after an edit
-- Re-tokenizes only that span instead of the whole file
-- Identifies the smallest AST subtree that must be rebuilt and reuses the rest
-- Targets a 60–80% reduction in re-analysis time on 1,000+ line files for
-  localized edits, benchmarked against full recompilation
+| File | Role |
+|---|---|
+| `lexer.py` | full lexer: source -> tokens |
+| `parser.py` | recursive-descent parser: tokens -> AST (every node has `[start:end]`) |
+| `diff_tool.py` | change detector: longest common prefix/suffix -> edit span |
+| `incremental_lexer.py` | re-lexes only the dirty lines, shifts the rest |
+| `incremental_parser.py` | re-parses only the affected statements, splices into the old AST |
+| `semantic.py` | scoped symbol table, type checks, dependency-aware incremental re-checking |
+| `incremental.py` | `IncrementalSession`: the cache store + driver for all stages |
+| `errors.py` | readable error messages with line, column and a source caret |
+| `pipeline.py` | the full (non-incremental) front end as one call |
+| `compiler_cli.py` | **single entry point** for the whole system |
+| `tests.py` | incremental == full equivalence tests (27 cases + 6,000 random edits) |
+| `test_suite.py` | 91 documented test cases; writes `test_results.txt/.csv` |
+| `benchmark.py` | time vs size, time vs edit type, memory; writes graphs + CSV |
+| `demo_incremental.py` | short demo: reused vs rebuilt AST |
+| `samples/` | example programs (valid and with errors) |
 
-This repository currently contains the **Phase 1 prototype**: a full
-(non-incremental) lexer and recursive-descent parser for a small C-like
-language, plus a working change-detector that proves edits are localized.
-Incremental re-tokenization and AST subtree reuse are the Phase 2/3
-deliverables.
-
-## Project structure
+## 3. How to run
 
 ```
-.
-├── lexer.py          # DFA-style tokenizer -> list of Token(type, value, start, end, line)
-├── parser.py         # Recursive-descent parser -> position-tagged AST
-├── diff_tool.py       # Hand-rolled LCP/LCS diff to locate an edit's character span
-├── main.py           # Driver: runs lexer + parser + change-detector demo
-└── samples/
-    ├── sample.src      # Example program used for the lexer/parser demo
-    ├── sample_old.src  # "Before" version for the change-detector demo
-    └── sample_new.src  # "After" version (one localized edit)
+python compiler_cli.py check samples/valid_program.src            # compile a file (lex + parse + semantic)
+python compiler_cli.py check samples/valid_program.src --tokens --ast
+python compiler_cli.py check samples/error_syntax.src             # syntax error with caret
+python compiler_cli.py check samples/error_lexical.src            # lexical error
+python compiler_cli.py check samples/error_semantic.src           # several semantic errors
+
+python compiler_cli.py diff samples/sample_old.src samples/sample_new.src --tree
+                                                                  # incremental update OLD -> NEW + reuse statistics
+
+python compiler_cli.py repl samples/sample_old.src                # interactive live editor (type 'help')
+
+python compiler_cli.py tests                                      # all tests
+python compiler_cli.py bench                                      # benchmarks (graphs + CSV)
 ```
+`check` exits with code 0 when the program is correct and 1 when errors were found.
 
-## Language subset
+Interactive editor commands: `show`, `replace N text`, `insert N text`, `delete N`, `undo`, `diag`, `tokens`, `ast`, `help`, `quit`.
+A syntax or lexical error rejects the edit and keeps the previous valid version.
 
-Variable declarations, assignments, arithmetic and Boolean expressions,
-`if`/`else`, `while`, and function calls — deliberately excludes pointers,
-structs, and preprocessor directives (see report for full scope).
-
-## Running it
-
-Requires Python 3, no external dependencies.
-
-```bash
-python3 main.py
+## 4. The language
 ```
+program   -> { statement }
+statement -> 'int' IDENT '=' expr ';'  |  IDENT '=' expr ';'  |  expr ';'
+           | 'if' '(' expr ')' block [ 'else' block ]  |  'while' '(' expr ')' block  |  block
+block     -> '{' { statement } '}'
+expr      -> or-expr  (|| , && , == != , < > <= >= , + - , * / , unary - ! , primary)
+primary   -> NUMBER | 'true' | 'false' | IDENT | IDENT '(' [ args ] ')' | '(' expr ')'
+```
+Comments: `// to end of line`. Only integer variables exist; `true`/`false` and comparisons are bool *expressions*.
 
-This prints three sections:
-1. **Lexer** — full tokenization of `samples/sample.src`
-2. **Parser** — the full AST, with every node tagged `[start:end]`
-3. **Change Detector** — the character span that changed between
-   `samples/sample_old.src` and `samples/sample_new.src`, proving that a
-   localized edit only touches a tiny fraction of the file
+## 5. Semantic rules
+* a variable must be declared before use; a name cannot be declared twice in one scope (inner blocks may shadow)
+* arithmetic and comparisons need `int` operands; `&&`, `||`, `!` need `bool` operands; `==`/`!=` need matching types
+* `if`/`while` conditions must be `bool`; `int` variables can only hold `int` values
+* the only function is the built-in `print(x)` (exactly one argument); division by a literal 0 is an error
 
-## Roadmap
+## 6. Error messages
+```
+syntax error: missing ';' to end the statement (found 'int')
+  --> line 1, column 10
+  |
+1 | int x = 5
+  |          ^
+```
+Lexical, syntax and semantic errors all show the line, column and the offending source line. Semantic analysis
+reports every error it finds; the lexer and parser stop at the first one.
 
-- [x] Phase 1 — full lexer, full parser, change-detection prototype
-- [ ] Phase 2 — incremental re-tokenization, AST subtree reuse, dependency-aware
-      symbol table
-- [ ] Phase 3 — full incremental pipeline, benchmark suite (100–10,000 lines,
-      3 edit types), final report
+## 7. How the incremental design works
+1. **Diff** the old and new text -> changed span.
+2. **Re-lex** only the whole lines the span touches (the lexer has no multi-line tokens, so this is exact); shift later tokens by `delta`.
+3. **Re-parse** only the statements that overlap the dirty region, inside the deepest block that contains it; reuse every other node object; escalate to the parent block or a full parse if the local parse fails.
+4. **Re-check** only the new/changed top-level statements plus the statements that depend on a global name whose declaration was added or removed (dependency index `name -> users`).
+5. The cache (tokens, AST, symbol/dependency index) is updated; a failed edit never corrupts it.
 
-## License
-
-Academic project for the Compiler Design Laboratory course. Individual work.
+## 8. Known limitations
+* Granularity is the statement (not the expression); the diff scan and offset shifting are still O(n)
+* Only one built-in function; no user-defined functions, pointers, structs or strings
+* The parser stops at the first syntax error (no error recovery)
+* Very deeply nested input is limited by Python recursion (the CLI raises the limit to 20,000)

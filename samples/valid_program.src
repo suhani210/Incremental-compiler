@@ -1,0 +1,14 @@
+// counting program with nested control flow
+int n = 10;
+int i = 0;
+int total = 0;
+while (i < n) {
+    int sq = i * i;
+    if (sq > 20 && !(i == 7)) {
+        total = total + sq;
+    } else {
+        total = total + (i * 2 - 1) / 2;
+    }
+    i = i + 1;
+    print(total);
+}

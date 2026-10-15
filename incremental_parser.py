@@ -1,5 +1,17 @@
 """
 incremental_parser.py
+
+Re-parses only the smallest region of the AST that the edit touched, keeps every
+other node object (just shifting its offsets), and splices the new nodes in.
+
+Granularity = STATEMENTS.  The "containers" are Program and Block (they hold
+lists of statements).  We walk down from Program into nested Blocks as long as
+the dirty region lies strictly inside ONE block, then re-parse just the
+statements of that block that overlap the dirty region.
+
+If the re-parse fails (e.g. the edit unbalanced a brace) we escalate to the
+parent container, and finally to a full re-parse. Escalation never mutates the
+old tree, so a failed attempt is harmless.
 """
 
 from lexer import Token
@@ -174,7 +186,12 @@ def reparse(ast, tokens, dirty):
         for s in container.stmts[hi + 1:]:
             _shift_subtree(s, delta)
         # (c) splice the freshly parsed statements in
+        old_stmts = container.stmts[lo:hi + 1]
         container.stmts[lo:hi + 1] = new_stmts
+        if k == 0:                                   # top-level statements replaced
+            top_removed, top_added = old_stmts, list(new_stmts)
+        else:                                        # a top-level compound statement changed in place
+            top_removed, top_added = [path[1]], [path[1]]
 
         # Program's own span always follows the token stream
         ast.start = tokens[0].start
@@ -184,11 +201,14 @@ def reparse(ast, tokens, dirty):
         for n in new_stmts:
             _all_nodes(n, rebuilt)
         return ast, rebuilt, {"fallback": False, "level": k, "stmts_reparsed": len(new_stmts),
-                              "stmts_replaced": max(hi - lo + 1, 0)}
+                              "stmts_replaced": max(hi - lo + 1, 0),
+                              "top_removed": top_removed, "top_added": top_added}
 
     # nothing worked -> full re-parse (raises ParseError if the source is invalid)
+    old_top = list(ast.stmts)
     new_ast = parse(tokens)
     rebuilt = set()
     _all_nodes(new_ast, rebuilt)
     return new_ast, rebuilt, {"fallback": True, "level": -1,
-                              "stmts_reparsed": len(new_ast.stmts), "stmts_replaced": len(ast.stmts)}
+                              "stmts_reparsed": len(new_ast.stmts), "stmts_replaced": len(old_top),
+                              "top_removed": old_top, "top_added": list(new_ast.stmts)}

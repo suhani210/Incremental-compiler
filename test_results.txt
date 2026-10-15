@@ -1,0 +1,103 @@
+ID   Category          Test case                                        Result  Actual outcome
+--------------------------------------------------------------------------------------------------------------
+V01  Valid             variable declaration with arithmetic             PASS    ok
+V02  Valid             if / else                                        PASS    ok
+V03  Valid             while loop                                       PASS    ok
+V04  Valid             nested blocks                                    PASS    ok
+V05  Valid             built-in function call                           PASS    ok
+V06  Valid             boolean operators && || !                        PASS    ok
+V07  Valid             unary minus and parentheses                      PASS    ok
+V08  Valid             shadowing in inner block                         PASS    ok
+V09  Valid             comments and blank lines                         PASS    ok
+V10  Valid             boolean literals as condition                    PASS    ok
+V11  Valid             equality of two bools in a condition             PASS    ok
+S01  Invalid syntax    missing semicolon                                PASS    syntax: missing ';' to end the statement (found 'int')
+S02  Invalid syntax    missing closing brace                            PASS    syntax: unexpected end of file (a '}', ')' or ';' is probably missing)
+S03  Invalid syntax    missing closing parenthesis                      PASS    syntax: missing ')' (found '{')
+S04  Invalid syntax    declaration without a name                       PASS    syntax: expected a variable name (found '=')
+S05  Invalid syntax    'else' without 'if'                              PASS    syntax: unexpected 'else' here
+S06  Invalid syntax    condition without parentheses                    PASS    syntax: expected '(' (found 'a')
+S07  Invalid syntax    extra closing brace                              PASS    syntax: unexpected '}' here
+S08  Invalid syntax    missing '=' in declaration                       PASS    syntax: expected '=' (found '5')
+S09  Invalid syntax    empty condition                                  PASS    syntax: unexpected ')' here
+S10  Invalid syntax    unsupported 'return'                             PASS    syntax: unexpected 'return' here ('return' is not supported by this la
+S11  Invalid syntax    number glued to name                             PASS    syntax: expected a variable name (found '5')
+S12  Invalid syntax    dangling operator                                PASS    syntax: unexpected ';' here
+S13  Invalid syntax    unclosed call                                    PASS    syntax: missing ')' (found ';')
+L01  Lexical error     illegal character @                              PASS    lexical: unexpected character '@' (not part of the language)
+L02  Lexical error     illegal character #                              PASS    lexical: unexpected character '#' (not part of the language)
+L03  Lexical error     single & (not &&)                                PASS    lexical: unexpected character '&' (not part of the language)
+L04  Lexical error     single | (not ||)                                PASS    lexical: unexpected character '|' (not part of the language)
+L05  Lexical error     string literal (unsupported)                     PASS    lexical: unexpected character '"' (not part of the language)
+L06  Lexical error     error reported on the right line                 PASS    lexical: unexpected character '$' (not part of the language)
+M01  Semantic error    undeclared variable                              PASS    semantic: undeclared variable 'b' (declare it first, e.g. 'int b = 0;'
+M02  Semantic error    assignment to undeclared variable                PASS    semantic: assignment to undeclared variable 'a'
+M03  Semantic error    redeclaration in global scope                    PASS    semantic: redeclaration of 'a' (already declared in this scope)
+M04  Semantic error    redeclaration in the same block                  PASS    semantic: redeclaration of 'a' (already declared in this block)
+M05  Semantic error    int initialised with bool                        PASS    semantic: cannot initialize int variable 'a' with a bool expression
+M06  Semantic error    if condition is int                              PASS    semantic: condition of 'if' must be bool but got int (try a comparison
+M07  Semantic error    arithmetic on bool                               PASS    semantic: operator '+' needs int operands but got bool and int
+M08  Semantic error    && on ints                                       PASS    semantic: operator '&&' needs bool operands but got int and int
+M09  Semantic error    ! on int                                         PASS    semantic: operator '!' needs a bool operand but got int
+M10  Semantic error    comparing int with bool                          PASS    semantic: cannot compare int with bool using '=='
+M11  Semantic error    division by zero literal                         PASS    semantic: division by zero
+M12  Semantic error    call to unknown function                         PASS    semantic: call to undeclared function 'foo' (only print(...) is built 
+M13  Semantic error    wrong number of arguments                        PASS    semantic: 'print' expects 1 argument(s) but got 2
+M14  Semantic error    use before declaration                           PASS    semantic: assignment to undeclared variable 'a'
+M15  Semantic error    variable used outside its block                  PASS    semantic: assignment to undeclared variable 'a'
+M16  Semantic error    assigning bool to int variable                   PASS    semantic: cannot assign a bool value to int variable 'a'
+M17  Semantic error    several errors are all reported                  PASS    semantic: assignment to undeclared variable 'x'
+B01  Boundary          empty file                                       PASS    ok
+B02  Boundary          only whitespace                                  PASS    ok
+B03  Boundary          only comments                                    PASS    ok
+B04  Boundary          no trailing newline                              PASS    ok
+B05  Boundary          Windows (CRLF) line endings                      PASS    ok
+B06  Boundary          huge integer literal                             PASS    ok
+B07  Boundary          30 nested blocks                                 PASS    ok
+B08  Boundary          expression with 500 terms                        PASS    ok
+B09  Boundary          very long line (4,000+ chars)                    PASS    ok
+B10  Boundary          identifier with underscore and digits            PASS    ok
+B11  Boundary          identifier that starts with a keyword            PASS    ok
+B12  Boundary          60 nested parentheses                            PASS    ok
+B13  Boundary          a lone semicolon                                 PASS    syntax: unexpected ';' here
+B14  Boundary          error on the very last character                 PASS    syntax: unexpected end of file (a '}', ')' or ';' is probably missing)
+B15  Boundary          tabs as indentation                              PASS    ok
+C01  Complex           nested loops, branches, calls, long expressions  PASS    ok
+C02  Complex           complex program with one hidden type error       PASS    semantic: cannot assign a bool value to int variable 'total'
+E01  Incremental edit  change a number                                  PASS    identical
+E02  Incremental edit  rename identifier                                PASS    identical
+E03  Incremental edit  rename global used in blocks                     PASS    identical
+E04  Incremental edit  change operator                                  PASS    identical
+E05  Incremental edit  insert statement at top                          PASS    identical
+E06  Incremental edit  insert stmt in while                             PASS    identical
+E07  Incremental edit  delete a line                                    PASS    identical
+E08  Incremental edit  delete a declaration                             PASS    identical
+E09  Incremental edit  delete whole while                               PASS    identical
+E10  Incremental edit  add newline inside                               PASS    identical
+E11  Incremental edit  remove newline (join)                            PASS    identical
+E12  Incremental edit  edit first char                                  PASS    identical
+E13  Incremental edit  edit last char                                   PASS    identical
+E14  Incremental edit  append at end                                    PASS    identical
+E15  Incremental edit  merge two tokens                                 PASS    identical
+E16  Incremental edit  turn code into comment                           PASS    identical
+E17  Incremental edit  uncomment code                                   PASS    identical
+E18  Incremental edit  edit inside a comment                            PASS    identical
+E19  Incremental edit  syntax error: drop ;                             PASS    identical
+E20  Incremental edit  syntax error: drop }                             PASS    identical
+E21  Incremental edit  lex error: bad char                              PASS    identical
+E22  Incremental edit  no change                                        PASS    identical
+E23  Incremental edit  cond of while changed                            PASS    identical
+E24  Incremental edit  else removed                                     PASS    identical
+E25  Incremental edit  type error introduced                            PASS    identical
+E26  Incremental edit  redeclaration introduced                         PASS    identical
+E27  Incremental edit  redeclaration fixed                              PASS    identical
+--------------------------------------------------------------------------------------------------------------
+  Valid              11/11 passed
+  Invalid syntax     13/13 passed
+  Lexical error      6/6 passed
+  Semantic error     17/17 passed
+  Boundary           15/15 passed
+  Complex            2/2 passed
+  Incremental edit   27/27 passed
+
+TOTAL: 91/91 test cases passed

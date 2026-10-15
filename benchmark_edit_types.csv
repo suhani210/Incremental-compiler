@@ -1,0 +1,6 @@
+edit_type,full_ms,incremental_ms,tokens_relexed,nodes_rebuilt,stmts_rechecked
+change a literal in a loop body,66.3512000000992,5.010399999946458,6,4,1
+insert a new statement,77.3933999998917,5.4113999999572115,12,6,4
+delete a declaration (its users break),71.46299999999428,6.291899999951056,11,20,2
+edit inside a comment,86.34729999994306,9.410300000126881,0,0,0
+rename a widely used global,74.51199999991331,14.311399999996866,5,2,455
