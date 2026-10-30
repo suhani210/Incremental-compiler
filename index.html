@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incremental Compiler Workbench</title>
+<style>
+:root{--bg:#f6f7f4;--panel:#fff;--ink:#1d2428;--mute:#66727a;--line:#d9ded8;--accent:#1f5f5b;--accent-ink:#fff;
+--reuse:#1c7a4b;--reuse-bg:#e1f2e8;--new:#b3341f;--new-bg:#fbe4df;--err-bg:#fdf0ee;--code:#f0f2ee}
+@media (prefers-color-scheme:dark){:root{--bg:#14191b;--panel:#1c2326;--ink:#e4e9e6;--mute:#8e9aa0;--line:#2f3a3e;--accent:#4fb3aa;--accent-ink:#0d1517;
+--reuse:#6fd39b;--reuse-bg:#17352a;--new:#ff8a78;--new-bg:#3d1f1a;--err-bg:#331c19;--code:#11171a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line);background:var(--panel)}
+h1{font:600 1.15rem/1.2 Georgia,"Times New Roman",serif;margin:0 auto 0 0;letter-spacing:.01em}
+button,select{font:inherit;padding:.4rem .85rem;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(300px,2fr) 3fr;gap:1rem;padding:1rem 1.2rem}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:0}
+.card>h2{margin:0;padding:.6rem .9rem;font-size:.95rem;border-bottom:1px solid var(--line)}
+textarea{width:100%;height:60vh;min-height:320px;border:0;padding:.8rem .9rem;resize:vertical;background:var(--code);color:var(--ink);font:13.5px/1.55 Consolas,"Courier New",monospace;tab-size:2}
+.hint{padding:.5rem .9rem;color:var(--mute);font-size:.85rem}
+#msg{margin:.6rem .9rem;padding:.6rem .8rem;border-radius:6px;display:none;white-space:pre-wrap;font:13px/1.45 Consolas,monospace}
+#msg.bad{display:block;background:var(--err-bg);border-left:4px solid var(--new)}
+#msg.good{display:block;background:var(--reuse-bg);border-left:4px solid var(--reuse);font-family:inherit}
+nav{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+nav button{border:0;border-radius:0;border-bottom:3px solid transparent;background:none;padding:.6rem .9rem}
+nav button[aria-selected=true]{border-bottom-color:var(--accent);font-weight:600}
+.pane{display:none;padding:.9rem;overflow:auto;max-height:75vh}.pane.on{display:block}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:.25rem .6rem;border-bottom:1px solid var(--line);font-family:Consolas,monospace}
+th{font-family:inherit;color:var(--mute);font-weight:600;position:sticky;top:0;background:var(--panel)}
+tr.relexed td{background:var(--new-bg)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin-bottom:1rem}
+.stat{border:1px solid var(--line);border-radius:6px;padding:.6rem .8rem}
+.stat b{display:block;font:600 1.5rem/1.2 Georgia,serif}.stat span{color:var(--mute);font-size:.82rem}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:.4rem;overflow:hidden}.bar i{display:block;height:100%;background:var(--new)}
+pre{margin:0 0 .8rem;padding:.7rem .8rem;background:var(--code);border-radius:6px;overflow:auto;font:13px/1.45 Consolas,monospace}
+pre.err{background:var(--err-bg);border-left:4px solid var(--new)}
+details{margin-left:1.1rem;font:13px/1.7 Consolas,monospace}
+.tree>details{margin-left:0}
+summary{cursor:pointer}
+.leaf{margin-left:1.1rem;font:13px/1.7 Consolas,monospace}
+.tag{display:inline-block;padding:0 .4rem;border-radius:4px;font-size:11.5px;margin-right:.4rem}
+.tag.r{background:var(--reuse-bg);color:var(--reuse)}.tag.n{background:var(--new-bg);color:var(--new)}
+.pre{color:var(--mute)}.span{color:var(--mute);font-size:.85em}
+.legend{margin-bottom:.7rem;font-size:.85rem;color:var(--mute)}
+img{max-width:100%;border:1px solid var(--line);border-radius:6px;margin:.4rem 0 1rem;background:#fff}
+h3{font-size:.95rem;margin:1rem 0 .4rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Incremental Compiler Workbench</h1>
+  <label>Sample <select id="sample"><option value="">Choose a sample</option></select></label>
+  <button id="bCompile" class="primary">Compile and cache</button>
+  <button id="bEdit" disabled>Apply edit incrementally</button>
+  <button id="bUndo" disabled>Undo</button>
+</header>
+<main>
+  <section class="card">
+    <h2>Source</h2>
+    <textarea id="src" spellcheck="false" aria-label="Source code"></textarea>
+    <div class="hint">1. Compile and cache the source. 2. Change the text above. 3. Apply edit incrementally.</div>
+    <div id="msg" role="status"></div>
+  </section>
+  <section class="card">
+    <nav role="tablist" id="tabs">
+      <button role="tab" aria-selected="true" data-p="stats">Update summary</button>
+      <button role="tab" aria-selected="false" data-p="ast">AST</button>
+      <button role="tab" aria-selected="false" data-p="tokens">Tokens</button>
+      <button role="tab" aria-selected="false" data-p="tests">Tests</button>
+      <button role="tab" aria-selected="false" data-p="bench">Benchmarks</button>
+    </nav>
+    <div class="pane on" id="p-stats"><p class="hint">Compile a source to see results here.</p></div>
+    <div class="pane" id="p-ast"><p class="hint">Compile a source to see the syntax tree.</p></div>
+    <div class="pane" id="p-tokens"><p class="hint">Compile a source to see its tokens.</p></div>
+    <div class="pane" id="p-tests">
+      <button id="bTests">Run all tests</button> <span class="hint" id="tMsg">The full run includes the random-edit fuzz test and can take a while.</span>
+      <h3>Latest saved results (test_results.txt)</h3><pre id="tOut">Loading...</pre>
+    </div>
+    <div class="pane" id="p-bench">
+      <button id="bBench">Run benchmarks</button> <span class="hint" id="bMsg"></span>
+      <div id="bOut"></div>
+    </div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const post = (u, d) => fetch(u, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d||{})}).then(r => r.json());
+let cached = false;
+
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + b.dataset.p));
+});
+const showTab = n => document.querySelector(`#tabs [data-p=${n}]`).click();
+
+function msg(text, cls){ const m = $('msg'); m.className = cls || ''; m.textContent = text || ''; }
+function fail(r){ msg((r.msg ? r.msg + '\n\n' : '') + (r.block || ''), 'bad'); }
+
+function treeHtml(n, edit){
+  const tag = edit ? `<span class="tag ${n.new ? 'n' : 'r'}">${n.new ? 'REBUILT' : 'reused'}</span>` : '';
+  const head = `${tag}<span class="pre">${n.prefix ? esc(n.prefix) + ': ' : ''}</span>${esc(n.label)} <span class="span">[${n.start}:${n.end}]</span>`;
+  if (!n.kids.length) return `<div class="leaf">${head}</div>`;
+  const open = !edit || n.new || hasNew(n) ? ' open' : '';
+  return `<details${open}><summary>${head}</summary>${n.kids.map(k => treeHtml(k, edit)).join('')}</details>`;
+}
+const hasNew = n => n.new || n.kids.some(hasNew);
+
+function render(r, edit){
+  const s = r.stats;
+  let h = '';
+  if (s && !s.noop){
+    const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+    h += `<div class="stats">
+      <div class="stat"><b>${s.tokens_relexed} of ${s.tokens_total}</b><span>tokens re-lexed</span><div class="bar"><i style="width:${pct(s.tokens_relexed, s.tokens_total)}%"></i></div></div>
+      <div class="stat"><b>${s.nodes_rebuilt} of ${r.nodes}</b><span>AST nodes rebuilt</span><div class="bar"><i style="width:${pct(s.nodes_rebuilt, r.nodes)}%"></i></div></div>
+      <div class="stat"><b>${s.stmts_rechecked} of ${s.stmts_total}</b><span>statements re-checked (semantic)</span><div class="bar"><i style="width:${pct(s.stmts_rechecked, s.stmts_total)}%"></i></div></div>
+      <div class="stat"><b>${s.fallback ? 'Yes' : 'No'}</b><span>full re-parse fallback</span></div></div>
+      <table><tr><th>Stage</th><th>Time (ms)</th></tr>
+      <tr><td>diff</td><td>${s.diff_ms.toFixed(3)}</td></tr><tr><td>incremental lex</td><td>${s.lex_ms.toFixed(3)}</td></tr>
+      <tr><td>incremental parse</td><td>${s.parse_ms.toFixed(3)}</td></tr><tr><td>semantic</td><td>${s.sem_ms.toFixed(3)}</td></tr>
+      <tr><td><b>total</b></td><td><b>${s.total_ms.toFixed(3)}</b></td></tr></table>`;
+  } else if (s && s.noop) h += `<p class="hint">No change since the cached version.</p>`;
+  else h += `<p class="hint">Cached: ${r.tokens.length} tokens and ${r.nodes} AST nodes. Edit the source and apply the edit to see what gets reused.</p>`;
+  h += `<h3>Semantic errors (${r.diags.length})</h3>`;
+  h += r.diags.length ? r.diags.map(d => `<pre class="err">${esc(d.block)}</pre>`).join('') : `<p class="hint">No semantic errors.</p>`;
+  $('p-stats').innerHTML = h;
+
+  $('p-ast').innerHTML = (edit ? `<div class="legend"><span class="tag r">reused</span> kept from the cache <span class="tag n">REBUILT</span> parsed again after the edit</div>` : '')
+    + `<div class="tree">${treeHtml(r.ast, edit)}</div>`;
+
+  const d = r.dirty;
+  $('p-tokens').innerHTML = (d ? `<div class="legend">Highlighted rows were re-lexed (${r.stats.tokens_relexed}). All others were reused and shifted.</div>` : '')
+    + `<table><tr><th>#</th><th>Type</th><th>Value</th><th>Span</th><th>Line</th></tr>`
+    + r.tokens.map((t, i) => `<tr class="${d && t.start >= d[0] && t.start < d[1] ? 'relexed' : ''}"><td>${i}</td><td>${esc(t.type)}</td><td>${esc(t.value)}</td><td>${t.start}:${t.end}</td><td>${t.line}</td></tr>`).join('') + `</table>`;
+  $('bEdit').disabled = false; $('bUndo').disabled = !r.can_undo; cached = true;
+}
+
+function handle(r, edit, okText){
+  if (!r.ok){ fail(r); $('bUndo').disabled = $('bUndo').disabled; return; }
+  $('src').value = r.src; render(r, edit); msg(okText, 'good');
+}
+
+$('bCompile').onclick = async () => {
+  const r = await post('/api/compile', {src: $('src').value});
+  if (r.ok) { handle(r, false, 'Compiled and cached.'); showTab('stats'); } else { fail(r); }
+};
+$('bEdit').onclick = async () => {
+  const r = await post('/api/edit', {src: $('src').value});
+  if (r.ok) { handle(r, !(r.stats && r.stats.noop), r.stats && r.stats.noop ? 'No change.' : 'Edit applied incrementally.'); showTab('stats'); }
+  else { fail(r); }
+};
+$('bUndo').onclick = async () => {
+  const r = await post('/api/undo');
+  if (r.ok) handle(r, true, 'Edit undone.'); else fail(r);
+};
+$('sample').onchange = async e => {
+  if (!e.target.value) return;
+  const r = await (await fetch('/api/sample?name=' + encodeURIComponent(e.target.value))).json();
+  $('src').value = r.src; msg('Sample loaded. Choose "Compile and cache".', 'good');
+};
+
+async function job(what, btn, note, out){
+  btn.disabled = true; note.textContent = 'Running...';
+  const r = await post('/api/run', {what});
+  btn.disabled = false; note.textContent = r.ok ? (r.code === 0 ? 'Finished successfully.' : 'Finished with a non-zero exit code.') : r.msg;
+  if (r.ok) out(r.out);
+  loadResults();
+}
+$('bTests').onclick = () => job('tests', $('bTests'), $('tMsg'), t => $('tOut').textContent = t);
+$('bBench').onclick = () => job('bench', $('bBench'), $('bMsg'), () => {});
+
+function csvTable(txt){
+  const rows = txt.trim().split(/\r?\n/).map(l => l.split(','));
+  if (rows.length < 2) return '<p class="hint">No data yet. Run the benchmarks.</p>';
+  return '<table>' + rows.map((r, i) => '<tr>' + r.map(c => i ? `<td>${esc(c)}</td>` : `<th>${esc(c)}</th>`).join('') + '</tr>').join('') + '</table>';
+}
+async function loadResults(){
+  const r = await (await fetch('/api/results')).json();
+  $('tOut').textContent = r.tests || 'No saved test results yet. Run the tests.';
+  const stamp = Date.now();
+  $('bOut').innerHTML = r.images.map(n => `<img src="/img/${n}?t=${stamp}" alt="${n}">`).join('')
+    + Object.entries(r.csv).map(([n, t]) => `<h3>${n.replace('benchmark_', '').replace('_', ' ')}</h3>` + csvTable(t)).join('');
+}
+(async () => {
+  const names = await (await fetch('/api/samples')).json();
+  $('sample').innerHTML += names.map(n => `<option>${esc(n)}</option>`).join('');
+  loadResults();
+})();
+</script>
+</body>
+</html>

@@ -1,29 +1,5 @@
 """
 semantic.py  -  change-scoped semantic analysis (Phase 3)
-
-Checks performed
-  * declared-before-use            (variables)
-  * redeclaration in the same scope
-  * type checking: int / bool expressions, conditions must be bool,
-    arithmetic needs int, && || ! need bool, == != need matching types
-  * calls: only the built-in print(x) exists; wrong arity / unknown function
-  * division by a literal zero
-
-Scopes: Program = global scope; every { } block opens a nested scope.
-
-INCREMENTAL DESIGN  (the "dependency-aware" part)
-  The unit of work is a TOP-LEVEL statement.  For each one we cache
-        diags      - the errors found inside it
-        free       - names it uses from OUTSIDE itself (i.e. from the global scope)
-        decl       - the global name it declares (only `int x = ...;` at top level)
-  and an index  users[name] -> {top-level statements whose result depends on `name`}.
-
-  After an edit the parser tells us which top-level statements were removed / added.
-  We then re-check only
-        1. the added / modified statements, and
-        2. the statements in users[n] for every name n whose global declaration was
-           added or removed by this edit  (their answer may have changed).
-  Everything else keeps its cached result.
 """
 
 from parser import (Program, Block, VarDecl, Assignment, IfStmt, WhileStmt, ExprStmt,
